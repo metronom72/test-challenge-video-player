@@ -1,28 +1,28 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Видеоплеер</title>
+  <link rel="stylesheet" href="./style.css" />
+  <title>Video Player</title>
 </head>
 <body>
 <div id="app">
   <div class="container">
-    <h1>Видеоплеер</h1>
+    <h1>Video Player</h1>
 
     <div class="controls">
-      <label for="videoSelect">Выберите видео:</label>
+      <label for="videoSelect">Select video:</label>
       <select id="videoSelect">
-        <option value="">-- Выберите видео --</option>
-        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4">Big Buck Bunny</option>
-        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4">Elephants Dream</option>
-        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4">For Bigger Blazes</option>
-        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4">Sintel</option>
+        <option value="">-- Select video --</option>
+        <option value="https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd">Angel One (DASH)</option>
+        <option value="https://storage.googleapis.com/shaka-demo-assets/bbb-dark-truths-hls/hls.m3u8">Big Buck Bunny (HLS)</option>
+        <option value="https://media.w3.org/2010/05/sintel/trailer.mp4">Sintel Trailer (MP4)</option>
       </select>
     </div>
 
     <video id="videoPlayer" width="640" height="360" controls>
-      <p>Ваш браузер не поддерживает видео HTML5.</p>
+      <p>Your browser doesn't support HTML5 video.</p>
     </video>
   </div>
 </div>
