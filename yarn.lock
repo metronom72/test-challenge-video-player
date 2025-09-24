@@ -233,6 +233,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/hls.js@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@types/hls.js@npm:1.0.0"
+  dependencies:
+    hls.js: "npm:*"
+  checksum: 10c0/147ae6355700b8356340ab6c2e2fcda63050c31e401e81485fde82bdc34c42bb4ce513679ddebe097b0769abef56bd6525bb3b655f9b2e992450799e93dde5e6
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:^3.0.0":
   version: 3.0.1
   resolution: "abbrev@npm:3.0.1"
@@ -554,6 +563,13 @@ __metadata:
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: 10c0/386d011a553e02bc594ac2ca0bd6d9e4c22d7fa8cfbfc448a6d148c59ea881b092db9dbe3547ae4b88e55f1b01f7c4a2ecc53b310c042793e63aa44cf6c257f2
+  languageName: node
+  linkType: hard
+
+"hls.js@npm:*, hls.js@npm:^1.6.13":
+  version: 1.6.13
+  resolution: "hls.js@npm:1.6.13"
+  checksum: 10c0/3f937f64735c02cb82e16268f763e35f73214ad47345ce51e8fa55d532fff184e0f889f06a87f07f83c36c2d25bd987f791ef6cf4de216f9d90e1fa383262094
   languageName: node
   linkType: hard
 
@@ -1271,7 +1287,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "test-challenge-video-player@workspace:."
   dependencies:
+    "@types/hls.js": "npm:^1.0.0"
     dashjs: "npm:^5.0.3"
+    hls.js: "npm:^1.6.13"
     typescript: "npm:~5.8.3"
     vite: "npm:rolldown-vite@7.1.12"
   languageName: unknown
