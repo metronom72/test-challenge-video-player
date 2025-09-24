@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Видеоплеер</title>
+</head>
+<body>
+<div id="app">
+  <div class="container">
+    <h1>Видеоплеер</h1>
+
+    <div class="controls">
+      <label for="videoSelect">Выберите видео:</label>
+      <select id="videoSelect">
+        <option value="">-- Выберите видео --</option>
+        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4">Big Buck Bunny</option>
+        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4">Elephants Dream</option>
+        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4">For Bigger Blazes</option>
+        <option value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4">Sintel</option>
+      </select>
+    </div>
+
+    <video id="videoPlayer" width="640" height="360" controls>
+      <p>Ваш браузер не поддерживает видео HTML5.</p>
+    </video>
+  </div>
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
