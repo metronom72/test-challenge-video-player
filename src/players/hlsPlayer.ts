@@ -1,5 +1,5 @@
 import Hls from 'hls.js';
-import { type BasePlayer, type PlayerCallbacks, type BrowserSupport } from '../types';
+import { type BasePlayer, type PlayerCallbacks, type BrowserSupport, type AutoplayResult } from '../types';
 
 export class HlsPlayer implements BasePlayer {
   private hlsInstance: Hls | null = null;
@@ -36,9 +36,30 @@ export class HlsPlayer implements BasePlayer {
     videoElement.src = url;
     videoElement.load();
 
+    const canPlayHandler = async () => {
+      callbacks.onReady('HLS ready (native)');
+      console.log('HLS loaded natively:', url);
+
+      try {
+        const autoplayResult = await this.attemptAutoplay(videoElement);
+        if (autoplayResult.success) {
+          if (autoplayResult.muted) {
+            callbacks.onStatusUpdate('HLS playing (muted due to autoplay policy)');
+          } else {
+            callbacks.onStatusUpdate('HLS playing with audio');
+          }
+        } else {
+          callbacks.onAutoplayBlocked?.('Click play button to start HLS video');
+        }
+      } catch (error) {
+        console.log('HLS native autoplay attempt completed with restrictions');
+      }
+
+      videoElement.removeEventListener('canplay', canPlayHandler);
+    };
+
+    videoElement.addEventListener('canplay', canPlayHandler);
     callbacks.onStatusUpdate('HLS loaded (native support)');
-    callbacks.onReady('HLS ready (native)');
-    console.log('HLS loaded natively:', url);
   }
 
   private initializeHlsJs(videoElement: HTMLVideoElement, url: string, callbacks: PlayerCallbacks): void {
@@ -55,9 +76,24 @@ export class HlsPlayer implements BasePlayer {
       console.log('HLS media attached');
     });
 
-    this.hlsInstance.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+    this.hlsInstance.on(Hls.Events.MANIFEST_PARSED, async (_, data) => {
       callbacks.onReady('HLS stream ready (hls.js)');
       console.log('HLS manifest parsed. Quality levels:', data.levels.length);
+
+      try {
+        const autoplayResult = await this.attemptAutoplay(videoElement);
+        if (autoplayResult.success) {
+          if (autoplayResult.muted) {
+            callbacks.onStatusUpdate('HLS playing (muted due to autoplay policy)');
+          } else {
+            callbacks.onStatusUpdate('HLS playing with audio');
+          }
+        } else {
+          callbacks.onAutoplayBlocked?.('Click play button to start HLS video');
+        }
+      } catch (error) {
+        console.log('HLS.js autoplay attempt completed with restrictions');
+      }
     });
 
     this.hlsInstance.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
@@ -70,6 +106,26 @@ export class HlsPlayer implements BasePlayer {
     });
 
     callbacks.onStatusUpdate('HLS player initialized (hls.js)');
+  }
+
+  async attemptAutoplay(videoElement: HTMLVideoElement): Promise<AutoplayResult> {
+    try {
+      await videoElement.play();
+      return { success: true, muted: false };
+    } catch (error: any) {
+      try {
+        videoElement.muted = true;
+        await videoElement.play();
+        return { success: true, muted: true };
+      } catch (mutedError: any) {
+        console.log('HLS autoplay blocked by browser policy');
+        return {
+          success: false,
+          muted: false,
+          error: 'Autoplay blocked by browser policy'
+        };
+      }
+    }
   }
 
   private handleHlsError(data: any, callbacks: PlayerCallbacks): void {

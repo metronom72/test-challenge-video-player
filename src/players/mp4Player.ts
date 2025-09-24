@@ -1,4 +1,4 @@
-import { type BasePlayer, type PlayerCallbacks } from '../types';
+import { type BasePlayer, type PlayerCallbacks, type AutoplayResult } from '../types';
 
 export class Mp4Player implements BasePlayer {
   private videoElement: HTMLVideoElement | null = null;
@@ -28,6 +28,7 @@ export class Mp4Player implements BasePlayer {
 
     this.removeEventListeners();
 
+    // Load events
     this.listeners.loadstart = () => {
       callbacks.onStatusUpdate('Started loading video');
     };
@@ -41,8 +42,25 @@ export class Mp4Player implements BasePlayer {
       callbacks.onStatusUpdate('Video data loaded');
     };
 
-    this.listeners.canplay = () => {
+    this.listeners.canplay = async () => {
       callbacks.onReady('Video ready to play');
+
+      if (this.videoElement) {
+        try {
+          const autoplayResult = await this.attemptAutoplay(this.videoElement);
+          if (autoplayResult.success) {
+            if (autoplayResult.muted) {
+              callbacks.onStatusUpdate('MP4 playing (muted due to autoplay policy)');
+            } else {
+              callbacks.onStatusUpdate('MP4 playing with audio');
+            }
+          } else {
+            callbacks.onAutoplayBlocked?.('Click play button to start MP4 video');
+          }
+        } catch (error) {
+          console.log('MP4 autoplay attempt completed with restrictions');
+        }
+      }
     };
 
     this.listeners.canplaythrough = () => {
@@ -78,6 +96,27 @@ export class Mp4Player implements BasePlayer {
     Object.entries(this.listeners).forEach(([event, listener]) => {
       this.videoElement?.addEventListener(event, listener);
     });
+  }
+
+  async attemptAutoplay(videoElement: HTMLVideoElement): Promise<AutoplayResult> {
+    try {
+      await videoElement.play();
+      return { success: true, muted: false };
+    } catch (error: any) {
+      try {
+        videoElement.muted = true;
+        await videoElement.play();
+        return { success: true, muted: true };
+      } catch (mutedError: any) {
+        // Both attempts failed
+        console.log('MP4 autoplay blocked by browser policy');
+        return {
+          success: false,
+          muted: false,
+          error: 'Autoplay blocked by browser policy'
+        };
+      }
+    }
   }
 
   private removeEventListeners(): void {

@@ -2,6 +2,7 @@ export interface PlayerCallbacks {
   onStatusUpdate: (message: string) => void;
   onError: (message: string) => void;
   onReady: (message: string) => void;
+  onAutoplayBlocked?: (message: string) => void;
 }
 
 export interface VideoOption {
@@ -17,7 +18,14 @@ export interface BrowserSupport {
   nativeHls: boolean;
 }
 
+export interface AutoplayResult {
+  success: boolean;
+  muted: boolean;
+  error?: string;
+}
+
 export interface BasePlayer {
   initialize(videoElement: HTMLVideoElement, url: string, callbacks: PlayerCallbacks): void;
   destroy(): void;
+  attemptAutoplay?(videoElement: HTMLVideoElement): Promise<AutoplayResult>;
 }

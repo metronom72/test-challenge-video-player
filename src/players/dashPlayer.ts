@@ -1,5 +1,5 @@
 import { MediaPlayer } from 'dashjs';
-import { type BasePlayer, type PlayerCallbacks } from '../types.ts';
+import { type BasePlayer, type PlayerCallbacks, type AutoplayResult } from '../types';
 
 export class DashPlayer implements BasePlayer {
   private player: any = null;
@@ -27,11 +27,49 @@ export class DashPlayer implements BasePlayer {
         console.log('DASH quality changed:', e);
       });
 
+      this.player.on('canPlay', async () => {
+        console.log('DASH stream ready for playback');
+        try {
+          const autoplayResult = await this.attemptAutoplay(videoElement);
+          if (autoplayResult.success) {
+            if (autoplayResult.muted) {
+              callbacks.onStatusUpdate('DASH playing (muted due to autoplay policy)');
+            } else {
+              callbacks.onStatusUpdate('DASH playing with audio');
+            }
+          } else {
+            callbacks.onAutoplayBlocked?.('Click play button to start DASH video');
+          }
+        } catch (error) {
+          console.log('DASH autoplay attempt completed with restrictions');
+        }
+      });
+
       callbacks.onStatusUpdate('DASH player initialized');
 
     } catch (error) {
       console.error('DASH player initialization failed:', error);
       callbacks.onError('Failed to initialize DASH player');
+    }
+  }
+
+  async attemptAutoplay(videoElement: HTMLVideoElement): Promise<AutoplayResult> {
+    try {
+      await videoElement.play();
+      return { success: true, muted: false };
+    } catch (error: any) {
+      try {
+        videoElement.muted = true;
+        await videoElement.play();
+        return { success: true, muted: true };
+      } catch (mutedError: any) {
+        console.log('DASH autoplay blocked by browser policy');
+        return {
+          success: false,
+          muted: false,
+          error: 'Autoplay blocked by browser policy'
+        };
+      }
     }
   }
 
