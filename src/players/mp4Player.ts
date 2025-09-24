@@ -28,7 +28,6 @@ export class Mp4Player implements BasePlayer {
 
     this.removeEventListeners();
 
-    // Load events
     this.listeners.loadstart = () => {
       callbacks.onStatusUpdate('Started loading video');
     };
@@ -108,7 +107,6 @@ export class Mp4Player implements BasePlayer {
         await videoElement.play();
         return { success: true, muted: true };
       } catch (mutedError: any) {
-        // Both attempts failed
         console.log('MP4 autoplay blocked by browser policy');
         return {
           success: false,

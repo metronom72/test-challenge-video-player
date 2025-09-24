@@ -29,3 +29,36 @@ export interface BasePlayer {
   destroy(): void;
   attemptAutoplay?(videoElement: HTMLVideoElement): Promise<AutoplayResult>;
 }
+
+export enum VideoState {
+  IDLE = 'IDLE',
+  LOADING = 'LOADING',
+  READY = 'READY',
+  PLAYING = 'PLAYING',
+  PAUSED = 'PAUSED',
+  SEEKING = 'SEEKING',
+  BUFFERING = 'BUFFERING',
+  ENDED = 'ENDED'
+}
+
+export interface VideoStateInfo {
+  state: VideoState;
+  timestamp: number;
+  previousState: VideoState | null;
+  metadata?: {
+    bufferingDuration?: number;
+    bufferingStartTime?: number;
+    currentTime?: number;
+    duration?: number;
+    bufferedRanges?: TimeRanges;
+    readyState?: number;
+  };
+}
+
+export interface VideoStateChangeEvent {
+  currentState: VideoStateInfo;
+  previousState: VideoStateInfo | null;
+  transitionDuration: number;
+}
+
+export type VideoStateChangeCallback = (event: VideoStateChangeEvent) => void;
