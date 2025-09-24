@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="./style.css" />
   <title>Video Player</title>
+  <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
 <div id="app">
@@ -15,10 +15,14 @@
       <label for="videoSelect">Select video:</label>
       <select id="videoSelect">
         <option value="">-- Select video --</option>
-        <option value="https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd">Angel One (DASH)</option>
-        <option value="https://storage.googleapis.com/shaka-demo-assets/bbb-dark-truths-hls/hls.m3u8">Big Buck Bunny (HLS)</option>
-        <option value="https://media.w3.org/2010/05/sintel/trailer.mp4">Sintel Trailer (MP4)</option>
+        <option value="https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd" data-type="dash">Angel One (DASH)</option>
+        <option value="https://storage.googleapis.com/shaka-demo-assets/bbb-dark-truths-hls/hls.m3u8" data-type="hls">Big Buck Bunny (HLS)</option>
+        <option value="https://media.w3.org/2010/05/sintel/trailer.mp4" data-type="mp4">Sintel Trailer (MP4)</option>
       </select>
+    </div>
+
+    <div class="video-info">
+      <p id="videoStatus">Select a video to start playing</p>
     </div>
 
     <video id="videoPlayer" width="640" height="360" controls>

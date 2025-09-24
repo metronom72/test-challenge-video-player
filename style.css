@@ -34,6 +34,22 @@ h1 {
     text-align: center;
 }
 
+.video-info {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.video-info p {
+    margin: 0;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #495057;
+    font-weight: 500;
+}
+
 label {
     font-weight: bold;
     color: #555;
