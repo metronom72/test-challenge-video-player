@@ -4,7 +4,7 @@ import { type BasePlayer, type PlayerCallbacks, type AutoplayResult } from '../t
 export class DashPlayer implements BasePlayer {
   private player: any = null;
 
-  initialize(videoElement: HTMLVideoElement, url: string, callbacks: PlayerCallbacks): void {
+  constructor(videoElement: HTMLVideoElement, url: string, callbacks: PlayerCallbacks) {
     try {
       this.player = MediaPlayer().create();
       this.player.initialize(videoElement, url, true);

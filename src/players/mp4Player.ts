@@ -4,7 +4,7 @@ export class Mp4Player implements BasePlayer {
   private videoElement: HTMLVideoElement | null = null;
   private listeners: { [key: string]: EventListener } = {};
 
-  initialize(videoElement: HTMLVideoElement, url: string, callbacks: PlayerCallbacks): void {
+  constructor(videoElement: HTMLVideoElement, url: string, callbacks: PlayerCallbacks) {
     this.videoElement = videoElement;
 
     try {

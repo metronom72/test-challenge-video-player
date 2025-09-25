@@ -5,7 +5,7 @@ export class HlsPlayer implements BasePlayer {
   private hlsInstance: Hls | null = null;
   private videoElement: HTMLVideoElement | null = null;
 
-  static checkSupport(): BrowserSupport {
+  static isSupported(): BrowserSupport {
     const video = document.createElement('video');
     return {
       hls: Hls.isSupported(),
@@ -13,9 +13,9 @@ export class HlsPlayer implements BasePlayer {
     };
   }
 
-  initialize(videoElement: HTMLVideoElement, url: string, callbacks: PlayerCallbacks): void {
+  constructor(videoElement: HTMLVideoElement, url: string, callbacks: PlayerCallbacks) {
     this.videoElement = videoElement;
-    const support = HlsPlayer.checkSupport();
+    const support = HlsPlayer.isSupported();
 
     try {
       if (support.nativeHls) {

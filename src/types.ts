@@ -24,10 +24,10 @@ export interface AutoplayResult {
   error?: string;
 }
 
-export interface BasePlayer {
-  initialize(videoElement: HTMLVideoElement, url: string, callbacks: PlayerCallbacks): void;
-  destroy(): void;
-  attemptAutoplay?(videoElement: HTMLVideoElement): Promise<AutoplayResult>;
+export abstract class BasePlayer {
+  constructor(_videoElement: HTMLVideoElement, _url: string, _callbacks: PlayerCallbacks) {}
+  abstract destroy(): void
+  attemptAutoplay?(videoElement: HTMLVideoElement): Promise<AutoplayResult>
 }
 
 export enum VideoState {

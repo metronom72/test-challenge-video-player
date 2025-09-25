@@ -50,7 +50,7 @@ function showError(message: string): void {
   updateStatus(`Error: ${message}`);
   console.error('Player Error:', message);
   if (!message.toLowerCase().includes('autoplay')) {
-    alert(message);
+    console.warn(message);
   }
 }
 
@@ -228,21 +228,21 @@ function initializeVideoStateManager(): void {
   console.log('Video state manager initialized');
 }
 
-function createPlayer(videoType: VideoType): BasePlayer | null {
+function createPlayer(videoType: VideoType, videoPlayer: HTMLVideoElement, selectedVideo: string, playerCallbacks: PlayerCallbacks): BasePlayer | null {
   switch (videoType) {
     case 'dash':
       if (DashPlayer.isSupported()) {
-        return new DashPlayer();
+        return new DashPlayer(videoPlayer, selectedVideo, playerCallbacks);
       } else {
         showError('DASH is not supported in this browser');
         return null;
       }
 
     case 'hls':
-      return new HlsPlayer();
+      return new HlsPlayer(videoPlayer, selectedVideo, playerCallbacks);
 
     case 'mp4':
-      return new Mp4Player();
+      return new Mp4Player(videoPlayer, selectedVideo, playerCallbacks);
 
     default:
       showError(`Unknown video type: ${videoType}`);
@@ -253,7 +253,7 @@ function createPlayer(videoType: VideoType): BasePlayer | null {
 function logBrowserCapabilities(): void {
   console.log('=== Browser Video Capabilities ===');
   console.log('DASH supported:', DashPlayer.isSupported());
-  console.log('HLS support:', HlsPlayer.checkSupport());
+  console.log('HLS support:', HlsPlayer.isSupported());
   console.log('MP4 formats:', Mp4Player.getSupportedFormats());
 
   console.log('=== Autoplay Policy Information ===');
@@ -325,14 +325,11 @@ function handleVideoSelection(event: Event): void {
   console.log(`Video URL: ${selectedVideo}`);
 
   try {
-    currentPlayer = createPlayer(videoType);
+    currentPlayer = createPlayer(videoType, videoPlayer, selectedVideo, playerCallbacks);
 
     if (!currentPlayer) {
       return;
     }
-
-    currentPlayer.initialize(videoPlayer, selectedVideo, playerCallbacks);
-
   } catch (error) {
     console.error('Failed to initialize player:', error);
     showError('Failed to initialize video player');
@@ -340,6 +337,7 @@ function handleVideoSelection(event: Event): void {
   }
 }
 
+// Optional
 function addKeyboardShortcuts(): void {
   document.addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
