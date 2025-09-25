@@ -12,7 +12,6 @@ export class VideoStateManager {
   private eventListeners: Map<string, EventListener> = new Map();
   private stateChangeCallbacks: VideoStateChangeCallback[] = [];
   private bufferingStartTime: number | null = null;
-  private lastBufferingCheck: number = 0;
   private bufferingCheckInterval: number | null = null;
   private isDestroyed: boolean = false;
 
@@ -26,10 +25,12 @@ export class VideoStateManager {
   }
 
   public getCurrentState(): VideoState {
+    console.log(this.currentStateInfo.state)
     return this.currentStateInfo.state;
   }
 
   public getCurrentStateInfo(): VideoStateInfo {
+    console.log(this.currentStateInfo)
     return { ...this.currentStateInfo };
   }
 
@@ -48,7 +49,6 @@ export class VideoStateManager {
     console.log('🔄 VideoStateManager reset');
     this.stopBufferingMonitoring();
     this.bufferingStartTime = null;
-    this.lastBufferingCheck = 0;
     this.previousStateInfo = null;
     this.updateState(VideoState.IDLE);
     this.startBufferingMonitoring();

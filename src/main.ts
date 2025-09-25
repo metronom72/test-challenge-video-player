@@ -223,6 +223,7 @@ function initializeVideoStateManager(): void {
   }
 
   videoStateManager = new VideoStateManager(videoPlayer);
+  videoStateManager.getCurrentState()
   videoStateManager.onStateChange(handleVideoStateChange);
 
   console.log('Video state manager initialized');
