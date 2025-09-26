@@ -1,8 +1,7 @@
-import type Hls from 'hls.js';
 import type { BasePlayer, PlayerCallbacks, AutoplayResult } from '../types';
 
 export class HlsPlayer implements BasePlayer {
-  private hlsInstance: Hls | null = null;
+  private hlsInstance: any | null = null;
   private videoElement: HTMLVideoElement | null = null;
 
   static async new(
@@ -109,7 +108,7 @@ export class HlsPlayer implements BasePlayer {
       console.log('HLS media attached');
     });
 
-    this.hlsInstance.on(HlsCtor.Events.MANIFEST_PARSED, async (_evt, data) => {
+    this.hlsInstance.on(HlsCtor.Events.MANIFEST_PARSED, async (_evt: any, data: any) => {
       callbacks.onReady?.('HLS stream ready (hls.js)');
       console.log('HLS manifest parsed. Quality levels:', data.levels.length);
 
@@ -129,11 +128,11 @@ export class HlsPlayer implements BasePlayer {
       }
     });
 
-    this.hlsInstance.on(HlsCtor.Events.LEVEL_SWITCHED, (_evt, data) => {
+    this.hlsInstance.on(HlsCtor.Events.LEVEL_SWITCHED, (_evt: any, data: any) => {
       console.log('HLS level switched to:', data.level);
     });
 
-    this.hlsInstance.on(HlsCtor.Events.ERROR, (event, data) => {
+    this.hlsInstance.on(HlsCtor.Events.ERROR, (event: any, data: any) => {
       console.error('HLS error:', event, data);
       this.handleHlsError(HlsCtor, data, callbacks);
     });
