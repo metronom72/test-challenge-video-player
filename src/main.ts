@@ -1,6 +1,3 @@
-import { DashPlayer } from './players/dashPlayer';
-import { HlsPlayer } from './players/hlsPlayer';
-import { Mp4Player } from './players/mp4Player';
 import { VideoStateManager } from './videoStateManager';
 import {
   type VideoType,
@@ -89,17 +86,9 @@ function showPlayButton(): void {
 
   playButton.style.cssText = `
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.7);
-    color: white;
-    cursor: pointer;
-    z-index: 1000;
+    top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.7); color: white; cursor: pointer; z-index: 1000;
   `;
 
   const playBtnElement = playButton.querySelector('.play-btn') as HTMLButtonElement;
@@ -109,13 +98,9 @@ function showPlayButton(): void {
       border: 2px solid white;
       border-radius: 50px;
       padding: 20px 30px;
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      transition: all 0.3s ease;
+      color: white; cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 16px; transition: all 0.3s ease;
     `;
 
     playBtnElement.addEventListener('mouseover', () => {
@@ -131,7 +116,9 @@ function showPlayButton(): void {
 
   const videoContainer = videoPlayer.parentElement;
   if (videoContainer) {
-    videoContainer.style.position = 'relative';
+    if (getComputedStyle(videoContainer).position === 'static') {
+      videoContainer.style.position = 'relative';
+    }
     videoContainer.appendChild(playButton);
   }
 
@@ -140,7 +127,7 @@ function showPlayButton(): void {
       videoPlayer.muted = false;
       await videoPlayer.play();
       updateStatus('Playing with audio');
-    } catch (error) {
+    } catch {
       try {
         videoPlayer.muted = true;
         await videoPlayer.play();
@@ -155,7 +142,7 @@ function showPlayButton(): void {
 }
 
 function handleVideoStateChange(event: VideoStateChangeEvent): void {
-  const { currentState, previousState: _previousState, transitionDuration: _transitionDuration } = event;
+  const { currentState } = event;
 
   switch (currentState.state) {
     case VideoState.IDLE:
@@ -169,10 +156,7 @@ function handleVideoStateChange(event: VideoStateChangeEvent): void {
       break;
     case VideoState.PLAYING:
       updateStatus('Playing');
-      const playButton = document.querySelector('.autoplay-button');
-      if (playButton) {
-        playButton.remove();
-      }
+      document.querySelector('.autoplay-button')?.remove();
       break;
     case VideoState.PAUSED:
       updateStatus('Paused');
@@ -211,79 +195,61 @@ function destroyCurrentPlayer(): void {
     videoStateManager = null;
   }
 
-  const existingButton = document.querySelector('.autoplay-button');
-  if (existingButton) {
-    existingButton.remove();
-  }
+  document.querySelector('.autoplay-button')?.remove();
 }
 
 function initializeVideoStateManager(): void {
-  if (videoStateManager) {
-    videoStateManager.destroy();
-  }
+  if (videoStateManager) videoStateManager.destroy();
 
   videoStateManager = new VideoStateManager(videoPlayer);
-  videoStateManager.getCurrentState()
+  videoStateManager.getCurrentState();
   videoStateManager.onStateChange(handleVideoStateChange);
 
   console.log('Video state manager initialized');
 }
 
-function createPlayer(videoType: VideoType, videoPlayer: HTMLVideoElement, selectedVideo: string, playerCallbacks: PlayerCallbacks): BasePlayer | null {
+async function createPlayer(
+  videoType: VideoType,
+  videoEl: HTMLVideoElement,
+  selectedVideo: string,
+  callbacks: PlayerCallbacks
+): Promise<BasePlayer | null> {
   switch (videoType) {
-    case 'dash':
-      if (DashPlayer.isSupported()) {
-        return new DashPlayer(videoPlayer, selectedVideo, playerCallbacks);
-      } else {
+    case 'dash': {
+      const { DashPlayer } = await import('./players/dashPlayer');
+      const supported = await DashPlayer.isSupported();
+      if (!supported) {
         showError('DASH is not supported in this browser');
         return null;
       }
-
-    case 'hls':
-      return new HlsPlayer(videoPlayer, selectedVideo, playerCallbacks);
-
-    case 'mp4':
-      return new Mp4Player(videoPlayer, selectedVideo, playerCallbacks);
-
-    default:
+      return await DashPlayer.new(videoEl, selectedVideo, callbacks);
+    }
+    case 'hls': {
+      const { HlsPlayer } = await import('./players/hlsPlayer.ts');
+      const supported = await HlsPlayer.isSupported();
+      if (!supported) {
+        showError('DASH is not supported in this browser');
+        return null;
+      }
+      return HlsPlayer.new(videoEl, selectedVideo, callbacks);
+    }
+    case 'mp4': {
+      const { Mp4Player } = await import('./players/mp4Player.ts');
+      const supported = await Mp4Player.isSupported();
+      if (!supported) {
+        showError('DASH is not supported in this browser');
+        return null;
+      }
+      return await Mp4Player.new(videoEl, selectedVideo, callbacks);
+    }
+    default: {
       showError(`Unknown video type: ${videoType}`);
       return null;
+    }
   }
 }
 
-function logBrowserCapabilities(): void {
-  console.log('=== Browser Video Capabilities ===');
-  console.log('DASH supported:', DashPlayer.isSupported());
-  console.log('HLS support:', HlsPlayer.isSupported());
-  console.log('MP4 formats:', Mp4Player.getSupportedFormats());
-
-  console.log('=== Autoplay Policy Information ===');
-  console.log('User has interacted with page:', hasUserInteracted);
-
-  if ('userActivation' in navigator) {
-    console.log('User activation (modern API):', {
-      hasBeenActive: (navigator as any).userActivation.hasBeenActive,
-      isActive: (navigator as any).userActivation.isActive
-    });
-  }
-
-  const testVideo = document.createElement('video');
-  testVideo.muted = true;
-  testVideo.playsInline = true;
-  const canAutoplay = testVideo.play();
-  if (canAutoplay instanceof Promise) {
-    canAutoplay.then(() => {
-      console.log('Muted autoplay: likely supported');
-      testVideo.pause();
-    }).catch(() => {
-      console.log('Muted autoplay: likely blocked');
-    });
-  }
-
-  console.log('=====================================');
-}
-
-function initializeVideoPlayer(): void {
+async function initializeVideoPlayer(): Promise<void> {
   if (!videoSelect || !videoPlayer) {
     console.error('Required DOM elements not found');
     return;
@@ -294,16 +260,14 @@ function initializeVideoPlayer(): void {
 
   initializeVideoStateManager();
 
-  logBrowserCapabilities();
-
-  videoSelect.addEventListener('change', handleVideoSelection);
+  videoSelect.addEventListener('change', (e) => { void handleVideoSelection(e); });
 
   updateStatus('Select a video to start playing');
 
   console.log('Video player initialized successfully');
 }
 
-function handleVideoSelection(event: Event): void {
+async function handleVideoSelection(event: Event): Promise<void> {
   const target = event.target as HTMLSelectElement;
   const selectedVideo = target.value;
 
@@ -326,11 +290,8 @@ function handleVideoSelection(event: Event): void {
   console.log(`Video URL: ${selectedVideo}`);
 
   try {
-    currentPlayer = createPlayer(videoType, videoPlayer, selectedVideo, playerCallbacks);
-
-    if (!currentPlayer) {
-      return;
-    }
+    currentPlayer = await createPlayer(videoType, videoPlayer, selectedVideo, playerCallbacks);
+    if (!currentPlayer) return;
   } catch (error) {
     console.error('Failed to initialize player:', error);
     showError('Failed to initialize video player');
@@ -338,7 +299,6 @@ function handleVideoSelection(event: Event): void {
   }
 }
 
-// Optional
 function addKeyboardShortcuts(): void {
   document.addEventListener('keydown', (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
@@ -365,11 +325,11 @@ function addKeyboardShortcuts(): void {
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    initializeVideoPlayer();
+    void initializeVideoPlayer();
     addKeyboardShortcuts();
   });
 } else {
-  initializeVideoPlayer();
+  void initializeVideoPlayer();
   addKeyboardShortcuts();
 }
 

@@ -4,22 +4,50 @@ export class Mp4Player implements BasePlayer {
   private videoElement: HTMLVideoElement | null = null;
   private listeners: { [key: string]: EventListener } = {};
 
-  constructor(videoElement: HTMLVideoElement, url: string, callbacks: PlayerCallbacks) {
-    this.videoElement = videoElement;
+  static async new(
+    videoElement: HTMLVideoElement,
+    url: string,
+    callbacks: PlayerCallbacks
+  ): Promise<Mp4Player> {
+    const inst = new Mp4Player();
+    inst.videoElement = videoElement;
 
     try {
       videoElement.src = url;
 
-      this.setupEventListeners(callbacks);
+      inst.setupEventListeners(callbacks);
 
       videoElement.load();
 
-      callbacks.onStatusUpdate('MP4 video loading...');
+      callbacks.onStatusUpdate?.('MP4 video loading...');
       console.log('MP4 video initialized:', url);
 
+      return inst;
     } catch (error) {
       console.error('MP4 player initialization failed:', error);
-      callbacks.onError('Failed to initialize MP4 player');
+      callbacks.onError?.('Failed to initialize MP4 player');
+      try { inst.destroy(); } catch {}
+      throw error;
+    }
+  }
+
+  async attemptAutoplay(videoElement: HTMLVideoElement): Promise<AutoplayResult> {
+    try {
+      await videoElement.play();
+      return { success: true, muted: false };
+    } catch {
+      try {
+        videoElement.muted = true;
+        await videoElement.play();
+        return { success: true, muted: true };
+      } catch {
+        console.log('MP4 autoplay blocked by browser policy');
+        return {
+          success: false,
+          muted: false,
+          error: 'Autoplay blocked by browser policy',
+        };
+      }
     }
   }
 
@@ -29,41 +57,41 @@ export class Mp4Player implements BasePlayer {
     this.removeEventListeners();
 
     this.listeners.loadstart = () => {
-      callbacks.onStatusUpdate('Started loading video');
+      callbacks.onStatusUpdate?.('Started loading video');
     };
 
     this.listeners.loadedmetadata = () => {
-      callbacks.onReady('Video metadata loaded');
+      callbacks.onReady?.('Video metadata loaded');
       this.logVideoInfo();
     };
 
     this.listeners.loadeddata = () => {
-      callbacks.onStatusUpdate('Video data loaded');
+      callbacks.onStatusUpdate?.('Video data loaded');
     };
 
     this.listeners.canplay = async () => {
-      callbacks.onReady('Video ready to play');
+      callbacks.onReady?.('Video ready to play');
 
       if (this.videoElement) {
         try {
           const autoplayResult = await this.attemptAutoplay(this.videoElement);
           if (autoplayResult.success) {
-            if (autoplayResult.muted) {
-              callbacks.onStatusUpdate('MP4 playing (muted due to autoplay policy)');
-            } else {
-              callbacks.onStatusUpdate('MP4 playing with audio');
-            }
+            callbacks.onStatusUpdate?.(
+              autoplayResult.muted
+                ? 'MP4 playing (muted due to autoplay policy)'
+                : 'MP4 playing with audio'
+            );
           } else {
             callbacks.onAutoplayBlocked?.('Click play button to start MP4 video');
           }
-        } catch (error) {
+        } catch {
           console.log('MP4 autoplay attempt completed with restrictions');
         }
       }
     };
 
     this.listeners.canplaythrough = () => {
-      callbacks.onReady('Video can play through');
+      callbacks.onReady?.('Video can play through');
     };
 
     this.listeners.progress = () => {
@@ -72,12 +100,12 @@ export class Mp4Player implements BasePlayer {
 
     this.listeners.error = (event) => {
       console.error('MP4 video error:', event);
-      callbacks.onError('Error loading video');
+      callbacks.onError?.('Error loading video');
       this.handleVideoError();
     };
 
     this.listeners.stalled = () => {
-      callbacks.onStatusUpdate('Video loading stalled');
+      callbacks.onStatusUpdate?.('Video loading stalled');
     };
 
     this.listeners.play = () => {
@@ -97,26 +125,6 @@ export class Mp4Player implements BasePlayer {
     });
   }
 
-  async attemptAutoplay(videoElement: HTMLVideoElement): Promise<AutoplayResult> {
-    try {
-      await videoElement.play();
-      return { success: true, muted: false };
-    } catch (error: any) {
-      try {
-        videoElement.muted = true;
-        await videoElement.play();
-        return { success: true, muted: true };
-      } catch (mutedError: any) {
-        console.log('MP4 autoplay blocked by browser policy');
-        return {
-          success: false,
-          muted: false,
-          error: 'Autoplay blocked by browser policy'
-        };
-      }
-    }
-  }
-
   private removeEventListeners(): void {
     if (!this.videoElement) return;
 
@@ -134,7 +142,7 @@ export class Mp4Player implements BasePlayer {
       duration: this.videoElement.duration,
       videoWidth: this.videoElement.videoWidth,
       videoHeight: this.videoElement.videoHeight,
-      readyState: this.videoElement.readyState
+      readyState: this.videoElement.readyState,
     });
   }
 
@@ -190,25 +198,14 @@ export class Mp4Player implements BasePlayer {
     console.log('MP4 player destroyed');
   }
 
-  getVideoElement(): HTMLVideoElement | null {
-    return this.videoElement;
-  }
-
   static canPlayType(type: string): boolean {
     const video = document.createElement('video');
     return video.canPlayType(type) !== '';
   }
 
-  static getSupportedFormats(): string[] {
-    const video = document.createElement('video');
-    const formats = [
-      'video/mp4',
-      'video/webm',
-      'video/ogg',
-      'video/avi',
-      'video/mov'
-    ];
-
-    return formats.filter(format => video.canPlayType(format) !== '');
+  static async isSupported(): Promise<boolean> {
+    return Mp4Player.canPlayType('video/mp4');
   }
 }
+
+export default Mp4Player;
